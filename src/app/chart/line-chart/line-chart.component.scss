@@ -1,0 +1,29 @@
+﻿svg.line-chart-container {
+  background: #ccc;
+
+  path.line {
+    fill: none;
+    stroke: #000;
+    stroke-width: 2px;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  rect.focus-overlay {
+    fill: none;
+    pointer-events: all;
+  }
+
+  .hover-line {
+    stroke: #000;
+  }
+}
+
+.tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  background: #aaa;
+  padding: 10px;
+}
