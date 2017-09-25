@@ -1,4 +1,7 @@
-import { Component } from '@angular/core';
+﻿import { Component } from '@angular/core';
+import { DataService } from './chart/data.service';
+
+import { ChartData } from './chart/chart-data.model';
 
 @Component({
   selector: 'app-root',
@@ -6,5 +9,20 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'app works!';
+    private chartData: ChartData[] = [];
+
+    constructor(private dataService: DataService) {
+        this.getData();
+    }
+
+    getData() {
+        this.dataService.getLineChartData().subscribe((response) => {
+            this.chartData = response;
+        });
+    }
+    ferfreshData() {
+        this.dataService.getLineChartData().subscribe((response) => {
+           this.chartData = response;
+        });
+    }
 }

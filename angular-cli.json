@@ -1,4 +1,4 @@
-{
+﻿{
   "project": {
     "version": "1.0.0-beta.28.3",
     "name": "chart-app"
@@ -21,8 +21,8 @@
         "styles.css"
       ],
       "scripts": [],
-      "environments": {
-        "source": "environments/environment.ts",
+      "environmentSource": "environments/environment.ts",
+      "environment": {
         "dev": "environments/environment.ts",
         "prod": "environments/environment.prod.ts"
       }

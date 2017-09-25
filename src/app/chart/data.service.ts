@@ -3,7 +3,6 @@ import { Http } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
-
 @Injectable()
 export class DataService {
     private lineChartURL: string = 'http://59c391dbd201270011552f4e.mockapi.io/line-chart';

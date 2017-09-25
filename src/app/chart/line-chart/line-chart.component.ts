@@ -1,8 +1,16 @@
-﻿import { Component, OnInit, ViewChild, ElementRef, ViewEncapsulation  } from '@angular/core';
-import { Subscription } from 'rxjs/Subscription';
+﻿import {
+    Component,
+    ViewChild,
+    ElementRef,
+    ViewEncapsulation,
+    Input,
+    OnChanges
+} from '@angular/core';
 
-import { DataService } from '../data.service';
 import * as d3 from 'd3';
+
+import { ChartData } from '../chart-data.model';
+
 
 class ChartTooltip {
     private options: any = {
@@ -14,7 +22,7 @@ class ChartTooltip {
         extraY: -30
     };
 
-    private tooltip;
+    private tooltip: any;
     private isActive: boolean = false;
 
     constructor(private customOptions: any = {}) {
@@ -24,25 +32,26 @@ class ChartTooltip {
 
     init() {
         this.tooltip = d3.select(this.options.container).append(this.options.element)
-            .attr("class", "tooltip")
-            .style("opacity", 0);
+            .attr('class', 'tooltip')
+            .style('opacity', 0);
     }
 
     moveTo(x: number, y: number, content?: string) {
         if (!this.isActive) this.show();
         if (content) this.setText(content);
-       
+
+        this.checkPosition();
         this.tooltip
-            .style("left", (x + this.options.extraX) + "px")
-            .style("top", (y + this.options.extraY) + "px");
+            .style('left', (x + this.options.extraX) + 'px')
+            .style('top', (y + this.options.extraY) + 'px');
     }
 
     setText(content: string) {
         this.tooltip.html(content);
     }
 
-    setOrientation() {
-
+    checkPosition() {
+        console.log('check tooltip here');
     }
 
     show() {
@@ -51,7 +60,7 @@ class ChartTooltip {
             .classed(this.options.activeClass, true)
             .transition()
             .duration(this.options.animSpeed)
-            .style("opacity", 1);
+            .style('opacity', 1);
     }
 
     hide() {
@@ -60,7 +69,7 @@ class ChartTooltip {
             .classed(this.options.activeClass, false)
             .transition()
             .duration(this.options.animSpeed)
-            .style("opacity", 0);
+            .style('opacity', 0);
     }
 
     destroy() {
@@ -79,22 +88,22 @@ class FocusLayer {
             right: 0,
             bottom: 0
         },
+        pixelSpace: 20,
         onEnter: function () { },
         onOut: function () { },
         onMove: function (d) { }
     };
 
     private bisectDate = d3.bisector(function (d: any) { return d.date; }).left;
-    private focusLayer;
-    private focusLineX;
-    private focusCircle;
-    private focusOverlay;
-    private chartGroup;
-    private focusOverlayNode;
+    private focusLayer: any;
+    private focusLineX: any;
+    private focusCircle: any;
+    private focusOverlay: any;
+    private chartGroup: any;
     private x: any;
     private y: any;
 
-    constructor(private customOptions: any = {}, private svg: any, private chartData: any[]) {
+    constructor(private customOptions: any = {}, private svg: any, private chartData: ChartData[]) {
         this.options = Object.assign(this.options, customOptions);
         this.svg = d3.select(svg);
 
@@ -109,24 +118,23 @@ class FocusLayer {
 
     createStructure() {
         this.chartGroup = this.svg.select('.chart-group');
-        this.focusLayer = this.chartGroup.append("g")
+        this.focusLayer = this.chartGroup.append('g')
             .attr('class', 'focus-layer')
             .style('display', 'none');
 
         this.focusLineX = this.focusLayer.append('line')
             .attr('class', 'x-hover-line hover-line')
-            .attr("y1", 0)
-            .attr("y2", this.options.height);
+            .attr('y1', 0)
+            .attr('y2', this.options.height);
 
-        this.focusCircle = this.focusLayer.append("circle")
-            .attr("r", this.options.circleRadius);
+        this.focusCircle = this.focusLayer.append('circle')
+            .attr('r', this.options.circleRadius);
 
-        this.focusOverlay = this.svg.append("rect")
-            .attr("transform", "translate(" + this.options.margin.left + "," + this.options.margin.top + ")")
-            .attr("class", "focus-overlay")
-            .attr("width", this.options.width)
-            .attr("height", this.options.height);
-        this.focusOverlayNode = this.focusOverlay.node();
+        this.focusOverlay = this.svg.append('rect')
+            .attr('transform', `translate(${this.options.margin.left + this.options.pixelSpace}, ${this.options.margin.top})`)
+            .attr('class', 'focus-overlay')
+            .attr('width', this.options.width - this.options.pixelSpace * 2)
+            .attr('height', this.options.height);
     }
 
     attachEvents() {
@@ -136,31 +144,34 @@ class FocusLayer {
     private enterHandler = () => {
         this.focusOverlay
             .on('mousemove', this.moveHandler)
-        this.focusOverlay
             .on('mouseout', this.outHandler);
         this.focusLayer.style('display', null);
         this.options.onEnter();
     }
 
-    private moveHandler = (e: any) => {
+    private moveHandler = () => {
+        let d = this.getHoveredData();
+        this.focusLayer.attr('transform', `translate(${this.x(d.date)}, 0)`);
+        this.focusCircle.attr('transform', `translate(0, ${this.y(d.value)})`);
+        this.options.onMove(d);
+    }
+
+    private getHoveredData() {
         let x0 = this.x.invert(d3.mouse(this.focusOverlay.node())[0]);
         let i = this.bisectDate(this.chartData, x0, 1);
         let d0 = this.chartData[i - 1];
         let d1 = this.chartData[i];
-        let d = x0 - d0.date > d1.date - x0 ? d1 : d0;
-
-        this.focusLayer.attr("transform", "translate(" + this.x(d.date) + "," + 0 + ")");
-        this.focusCircle.attr("transform", "translate(" + 0 + "," + (this.y(d.value)) + ")");
-        this.options.onMove(d);
+        let d = x0 - (+d0.date) > (+d1.date) - x0 ? d1 : d0;
+        return d;
     }
 
-    private outHandler = () => {this.focusLayer.style("display", "none");
-        console.log('makecallback hide tooltip and remove from docuemnt move')
+    private outHandler = () => {
         this.focusLayer.style('display', 'none');
         this.focusOverlay
             .on('mousemove', null)
             .on('mouseout', null);
         this.options.onOut();
+        console.log('makecallback hide tooltip and remove from docuemnt move')
     }
 
     detachEvents() {
@@ -173,10 +184,14 @@ class FocusLayer {
     updateData(chartData: any[]) {
         this.chartData = chartData;
 
+        let minDate = +d3.min(this.chartData, function (d) { return d.date; });
+        let maxDate = +d3.max(this.chartData, function (d) { return d.date; });
+        let padding = (maxDate - minDate) * this.options.pixelSpace / this.options.width;
+
         this.x = d3.scaleTime().range([0, this.options.width]);
         this.y = d3.scaleLinear().range([this.options.height, 0]);
 
-        this.x.domain(d3.extent(this.chartData, function(d) { return d.date; }));
+        this.x.domain([minDate - padding, maxDate + padding]);
         this.y.domain([0, d3.max(this.chartData, function(d) { return d.value; })]);
     }
 
@@ -193,34 +208,28 @@ class FocusLayer {
   encapsulation: ViewEncapsulation.None
 })
 
-
-export class LineChartComponent implements OnInit {
+export class LineChartComponent implements OnChanges {
     @ViewChild('chart') private chartContainer: ElementRef;
-    private title = 'LineChartComponent works!';
+    @Input() private chartData: ChartData[] = [];
+    @Input() private width: number = 900;
+    @Input() private height: number = 500;
 
     private margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    private width: number;
-    private height: number;
-    private x: any;
-    private y: any;
+    //private svg: d3.Selection<any, any, any, any>;
     private svg: any;
     private chart: any;
-    private valueline: any;
-    private line: any;
-    private chartData: any[] = [];
+    private x: any;
+    private y: any;
     private axisX: any;
     private axisY: any;
-
+    private pixelSpace: number = 20;
+    private valueline: any;
+    private line: any;
+   
     private focusLayer: FocusLayer;
     private tooltipItem: ChartTooltip;
 
-    createChart() {
-        if (!this.svg) {
-            this.initSvg();
-            this.initTooltip();
-            this.initFocus();
-        }
-    }
+    constructor() {}
 
     private initTooltip() {
         this.tooltipItem = new ChartTooltip();
@@ -231,6 +240,7 @@ export class LineChartComponent implements OnInit {
             margin: this.margin,
             width: this.width,
             height: this.height,
+            pixelSpace: this.pixelSpace,
             onOut: () => {
                 this.tooltipItem && this.tooltipItem.hide();
             },
@@ -241,11 +251,16 @@ export class LineChartComponent implements OnInit {
     }
 
     private initSvg() {
-        this.svg = d3.select(this.chartContainer.nativeElement)
-            .append("g")
-            .attr("class", "chart-group")
-            .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
+        this.width = this.width - this.margin.left - this.margin.right;
+        this.height = this.height - this.margin.top - this.margin.bottom;
 
+        let minDate = +d3.min(this.chartData, function (d: ChartData) { return d.date; });
+        let maxDate = +d3.max(this.chartData, function (d: ChartData) { return d.date; });
+        let padding = (maxDate - minDate) * this.pixelSpace / this.width;
+        this.svg = d3.select(this.chartContainer.nativeElement)
+            .append('g')
+            .attr('class', 'chart-group')
+            .attr('transform', `translate(${this.margin.left}, ${this.margin.top })`);
 
         this.x = d3.scaleTime().range([0, this.width]);
         this.y = d3.scaleLinear().range([this.height, 0]);
@@ -256,67 +271,60 @@ export class LineChartComponent implements OnInit {
 
 
         // Scale the range of the data
-        this.x.domain(d3.extent(this.chartData, function (d) { return d.date; }));
+        this.x.domain([minDate - padding, maxDate + padding]);
         this.y.domain([0, d3.max(this.chartData, function (d) { return d.value; })]);
 
 
         // Add the X Axis
-        this.axisX = this.svg.append("g")
-            .attr("class", "axis axis--x")
-            .attr("transform", "translate(0," + this.height + ")")
-            .call(d3.axisBottom(this.x).tickFormat(d3.timeFormat("%b %Y")));
+        this.axisX = this.svg.append('g')
+            .attr('class', 'axis axis--x')
+            .attr('transform', `translate(0, ${this.height})`)
+            .call(d3.axisBottom(this.x).tickFormat(d3.timeFormat('%b %Y')));
 
         // Add the Y Axis
-        this.axisY = this.svg.append("g")
-            .attr("class", "axis axis--y")
+        this.axisY = this.svg.append('g')
+            .attr('class', 'axis axis--y')
             .call(d3.axisLeft(this.y).tickSizeInner(-this.width));
 
         // Add the valueline path.
-        this.line = this.svg.append("path")
-            .attr("class", "line")
+        this.line = this.svg.append('path')
+            .attr('class', 'line')
             .data([this.chartData])
-            .attr("class", "line")
-            .attr("d", this.valueline);
+            .attr('class', 'line')
+            .attr('d', this.valueline);
 
     }
 
-    constructor(private dataService: DataService) {
-        this.width = 900 - this.margin.left - this.margin.right;
-        this.height = 500 - this.margin.top - this.margin.bottom;
-    }
-
-    ngOnInit() {
-        this.getData();
-    }
-
-    ferfreshData() {
-        this.dataService.getLineChartData().subscribe((response) => {
-            this.chartData = response;
-            this.updateChart();
-        });
-    }
-
-    getData() {
-        this.dataService.getLineChartData().subscribe((response) => {
-            this.chartData = response;
-            this.createChart();
-        });
+    ngOnChanges() {
+        if (this.chartData && this.chartData.length) {
+            if (this.svg) {
+                this.updateChart();
+            } else {
+                this.initSvg();
+                this.initTooltip();
+                this.initFocus();
+            }
+        }
     }
 
     updateChart() {
         if (!this.line) return;
 
-        this.x.domain(d3.extent(this.chartData, function (d) { return d.date; }));
-        this.y.domain([0, d3.max(this.chartData, function (d) { return d.value; })]);
+        let minDate = +d3.min(this.chartData, function (d: ChartData) { return d.date; });
+        let maxDate = +d3.max(this.chartData, function (d: ChartData) { return d.date; });
+        let padding = (maxDate - minDate) * this.pixelSpace / this.width;
+
+        this.x.domain([minDate - padding, maxDate + padding]);
+        this.y.domain([0, d3.max(this.chartData, function (d: ChartData) { return d.value; })]);
 
         this.line
             .data([this.chartData])
             .transition('d')
-            .attr("d", this.valueline);
+            .attr('d', this.valueline);
 
         this.axisX
             .transition()
-            .call(d3.axisBottom(this.x).tickFormat(d3.timeFormat("%b %Y")));
+            .call(d3.axisBottom(this.x).tickFormat(d3.timeFormat('%b %Y')));
         this.axisY
             .transition()
             .call(d3.axisLeft(this.y).tickSizeInner(-this.width));
