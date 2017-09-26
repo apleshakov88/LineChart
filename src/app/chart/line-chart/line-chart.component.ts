@@ -162,8 +162,9 @@ class FocusLayer {
     }
 
     private getHoveredData() {
-        let x0 = this.x.invert(d3.mouse(this.focusOverlay.node())[0]);
+        let x0 = this.x.invert(d3.mouse(this.focusOverlay.node())[0] + this.options.pixelSpace);
         let i = this.bisectDate(this.chartData, x0, 1);
+
         let d0 = this.chartData[i - 1];
         let d1 = this.chartData[i];
         let d = x0 - (+d0.date) > (+d1.date) - x0 ? d1 : d0;
