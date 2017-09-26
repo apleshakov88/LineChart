@@ -1,21 +1,42 @@
 ﻿svg.line-chart-container {
-  background: #ccc;
-  
+  background: #fff;
+
+  .axis path {
+    stroke: rgb(215, 221, 229);
+  }
+
+  .tick line {
+    stroke: rgb(215, 221, 229);
+  }
+
   .axis--y {
     .domain {
       display: none;
     }
+
     .tick:first-of-type {
-      display: none;
+      line {
+        display: none;
+      }
+    }
+  }
+
+  .axis--x {
+    .tick {
+      line {
+        visibility: hidden;
+      }
     }
   }
 
   path.line {
     fill: none;
-    stroke: #000;
+    stroke: rgb(1, 184, 170);
     stroke-width: 2px;
-    stroke-linejoin: round;
-    stroke-linecap: round;
+  }
+
+  text {
+    fill: rgb(119, 119, 119);
   }
 
   rect.focus-overlay {
@@ -23,20 +44,45 @@
     pointer-events: all;
   }
 
-  .hover-line {
-    stroke: #000;
+  .focus-layer {
+    circle {
+      fill: rgb(1, 184, 170);
+    }
+
+    .hover-line {
+      stroke: #666;
+    }
   }
 }
 
 .tooltip {
   position: absolute;
   z-index: 10;
-  background: #aaa;
+  background: #333;
   padding: 10px;
   pointer-events: none;
   transform: translate(20px, -50%);
+  color: #fff;
 
   &.right-orientation {
     transform: translate(calc(-100% - 20px), -50%);
+
+    &:before {
+      border-right-color: transparent;
+      border-left: 10px solid #333;
+      left: auto;
+      right: -20px;
+    }
+  }
+
+  &:before {
+    position: absolute;
+    left: -20px;
+    top: 10px;
+    content: '';
+    height: 0;
+    width: 0;
+    border: 10px solid transparent;
+    border-right: 10px solid #333;
   }
 }

@@ -11,7 +11,6 @@ import * as d3 from 'd3';
 
 import { ChartData } from '../chart-data.model';
 
-
 class ChartTooltip {
     private options: any = {
         container: 'body',
@@ -87,7 +86,7 @@ class FocusLayer {
     private options: any = {
         height: 500,
         width: 900,
-        circleRadius: 7.5,
+        circleRadius: 3.5,
         margin: {
             top: 0,
             left: 0,
@@ -157,7 +156,7 @@ class FocusLayer {
 
     private moveHandler = () => {
         let d = this.getHoveredData();
-        this.focusLayer.attr('transform', `translate(${this.x(d.date)}, 0)`);
+        this.focusLayer.attr('transform', `translate(${this.x(d.date) + 0.5}, 0)`);
         this.focusCircle.attr('transform', `translate(0, ${this.y(d.value)})`);
         this.options.onMove(d);
     }
@@ -260,7 +259,7 @@ export class LineChartComponent implements OnChanges {
         }, this.chartContainer.nativeElement, this.chartData);
 
         function createTooltipHTML(d) {
-            let formatTime = d3.timeFormat("%B %d, %Y");
+            let formatTime = d3.timeFormat("%d.%m.%Y %H:%M:%S");
             let html: string = `<div class="date-holder">Date: ${formatTime(d.date)}</div>`;
             html += `<div class="value-holder">Value: ${d.value}</div>`;
             return html;
