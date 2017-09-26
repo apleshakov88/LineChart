@@ -100,7 +100,7 @@ class FocusLayer {
         onMove: function (d) { }
     };
 
-    private bisectDate = d3.bisector(function (d: any) { return d.date; }).left;
+    private bisectDate = d3.bisector((d:any) => d.date).left;
     private focusLayer: any;
     private focusLineX: any;
     private focusCircle: any;
@@ -190,15 +190,15 @@ class FocusLayer {
     updateData(chartData: any[]) {
         this.chartData = chartData;
 
-        let minDate = +d3.min(this.chartData, function (d) { return d.date; });
-        let maxDate = +d3.max(this.chartData, function (d) { return d.date; });
+        let minDate = +d3.min(this.chartData, (d: ChartData) => d.date);
+        let maxDate = +d3.max(this.chartData, (d: ChartData) => d.date);
         let padding = (maxDate - minDate) * this.options.pixelSpace / this.options.width;
 
         this.x = d3.scaleTime().range([0, this.options.width]);
         this.y = d3.scaleLinear().range([this.options.height, 0]);
 
         this.x.domain([minDate - padding, maxDate + padding]);
-        this.y.domain([0, d3.max(this.chartData, function(d) { return d.value; })]);
+        this.y.domain([0, d3.max(this.chartData, (d: ChartData) => d.value)]);
     }
 
     destroy() {
@@ -271,8 +271,8 @@ export class LineChartComponent implements OnChanges {
         this.width = this.width - this.margin.left - this.margin.right;
         this.height = this.height - this.margin.top - this.margin.bottom;
 
-        let minDate = +d3.min(this.chartData, function (d: ChartData) { return d.date; });
-        let maxDate = +d3.max(this.chartData, function (d: ChartData) { return d.date; });
+        let minDate = +d3.min(this.chartData, (d: ChartData) => d.date);
+        let maxDate = +d3.max(this.chartData, (d: ChartData) => d.date);
         let padding = (maxDate - minDate) * this.pixelSpace / this.width;
         this.svg = d3.select(this.chartContainer.nativeElement)
             .append('g')
@@ -288,7 +288,7 @@ export class LineChartComponent implements OnChanges {
 
 
         this.x.domain([minDate - padding, maxDate + padding]);
-        this.y.domain([0, d3.max(this.chartData, function (d) { return d.value; })]);
+        this.y.domain([0, d3.max(this.chartData, (d: ChartData) => d.value)]);
 
         this.axisX = this.svg.append('g')
             .attr('class', 'axis axis--x')
@@ -322,12 +322,12 @@ export class LineChartComponent implements OnChanges {
     updateChart() {
         if (!this.line) return;
 
-        let minDate = +d3.min(this.chartData, function (d: ChartData) { return d.date; });
-        let maxDate = +d3.max(this.chartData, function (d: ChartData) { return d.date; });
+        let minDate = +d3.min(this.chartData, (d: ChartData) => d.date);
+        let maxDate = +d3.max(this.chartData, (d: ChartData) => d.date);
         let padding = (maxDate - minDate) * this.pixelSpace / this.width;
 
         this.x.domain([minDate - padding, maxDate + padding]);
-        this.y.domain([0, d3.max(this.chartData, function (d: ChartData) { return d.value; })]);
+        this.y.domain([0, d3.max(this.chartData, (d: ChartData) => d.value)]);
 
         this.line
             .data([this.chartData])
