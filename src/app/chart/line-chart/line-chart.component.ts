@@ -18,8 +18,9 @@ class ChartTooltip {
         element: 'div',
         animSpeed: 200,
         activeClass: 'tooltip-active',
-        extraX: 30,
-        extraY: -30
+        extraX: 0,
+        extraY: 0,
+        positionCointainer: null
     };
 
     private tooltip: any;
@@ -40,9 +41,10 @@ class ChartTooltip {
         if (!this.isActive) this.show();
         if (content) this.setText(content);
 
-        this.checkPosition();
+        let left = x + this.options.extraX;
+        this.setOrientation(left);
         this.tooltip
-            .style('left', (x + this.options.extraX) + 'px')
+            .style('left', left + 'px')
             .style('top', (y + this.options.extraY) + 'px');
     }
 
@@ -50,8 +52,12 @@ class ChartTooltip {
         this.tooltip.html(content);
     }
 
-    checkPosition() {
-        console.log('check tooltip here');
+    setOrientation(tooltipLeft: number) {
+        if (this.options.positionCointainer) {
+            let positionContainerRight = this.options.positionCointainer.getBoundingClientRect().right;
+            let tooltipRight = tooltipLeft + this.tooltip.node().offsetWidth;
+            this.tooltip.classed('right-orientation', tooltipRight > positionContainerRight);
+        }
     }
 
     show() {
@@ -232,7 +238,9 @@ export class LineChartComponent implements OnChanges {
     constructor() {}
 
     private initTooltip() {
-        this.tooltipItem = new ChartTooltip();
+        this.tooltipItem = new ChartTooltip({
+            positionCointainer: this.chartContainer.nativeElement
+        });
     }
 
     private initFocus() {
@@ -245,9 +253,18 @@ export class LineChartComponent implements OnChanges {
                 this.tooltipItem && this.tooltipItem.hide();
             },
             onMove: (d) => {
-                this.tooltipItem && this.tooltipItem.moveTo(d3.event.pageX, d3.event.pageY, `<p>${d.value}</p>`);
+                if (this.tooltipItem) {
+                    this.tooltipItem.moveTo(d3.event.pageX, d3.event.pageY, createTooltipHTML(d));
+                }
             }
         }, this.chartContainer.nativeElement, this.chartData);
+
+        function createTooltipHTML(d) {
+            let formatTime = d3.timeFormat("%B %d, %Y");
+            let html: string = `<div class="date-holder">Date: ${formatTime(d.date)}</div>`;
+            html += `<div class="value-holder">Value: ${d.value}</div>`;
+            return html;
+        }
     }
 
     private initSvg() {
@@ -270,23 +287,18 @@ export class LineChartComponent implements OnChanges {
            .y((d: any) => this.y(d.value));
 
 
-        // Scale the range of the data
         this.x.domain([minDate - padding, maxDate + padding]);
         this.y.domain([0, d3.max(this.chartData, function (d) { return d.value; })]);
 
-
-        // Add the X Axis
         this.axisX = this.svg.append('g')
             .attr('class', 'axis axis--x')
             .attr('transform', `translate(0, ${this.height})`)
-            .call(d3.axisBottom(this.x).tickFormat(d3.timeFormat('%b %Y')));
+            .call(d3.axisBottom(this.x).tickSizeOuter(0).tickFormat(d3.timeFormat('%b %Y')));
 
-        // Add the Y Axis
         this.axisY = this.svg.append('g')
             .attr('class', 'axis axis--y')
-            .call(d3.axisLeft(this.y).tickSizeInner(-this.width));
+            .call(d3.axisLeft(this.y).tickSizeOuter(0).tickSizeInner(-this.width));
 
-        // Add the valueline path.
         this.line = this.svg.append('path')
             .attr('class', 'line')
             .data([this.chartData])
@@ -324,10 +336,10 @@ export class LineChartComponent implements OnChanges {
 
         this.axisX
             .transition()
-            .call(d3.axisBottom(this.x).tickFormat(d3.timeFormat('%b %Y')));
+            .call(d3.axisBottom(this.x).tickSizeOuter(0).tickFormat(d3.timeFormat('%b %Y')));
         this.axisY
             .transition()
-            .call(d3.axisLeft(this.y).tickSizeInner(-this.width));
+            .call(d3.axisLeft(this.y).tickSizeOuter(0).tickSizeInner(-this.width));
 
         this.focusLayer.updateData(this.chartData);
     }

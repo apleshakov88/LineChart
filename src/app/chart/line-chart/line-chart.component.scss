@@ -1,5 +1,14 @@
 ﻿svg.line-chart-container {
   background: #ccc;
+  
+  .axis--y {
+    .domain {
+      display: none;
+    }
+    .tick:first-of-type {
+      display: none;
+    }
+  }
 
   path.line {
     fill: none;
@@ -21,10 +30,13 @@
 
 .tooltip {
   position: absolute;
-  top: 0;
-  left: 0;
   z-index: 10;
   background: #aaa;
   padding: 10px;
   pointer-events: none;
+  transform: translate(20px, -50%);
+
+  &.right-orientation {
+    transform: translate(calc(-100% - 20px), -50%);
+  }
 }
