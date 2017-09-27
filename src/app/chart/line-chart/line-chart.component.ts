@@ -8,6 +8,8 @@
 } from '@angular/core';
 
 import * as d3 from 'd3';
+import * as d3Scale from 'd3-scale';
+import * as d3Selection from 'd3-selection';
 
 import { ChartData } from '../chart-data.model';
 
@@ -28,15 +30,16 @@ class ChartTooltip {
     constructor(private customOptions: any = {}) {
         this.options = Object.assign(this.options, customOptions);
         this.init();
+        console.log(d3Scale)
     }
 
-    init() {
+    init(): void {
         this.tooltip = d3.select(this.options.container).append(this.options.element)
             .attr('class', 'tooltip')
             .style('opacity', 0);
     }
 
-    moveTo(x: number, y: number, content?: string) {
+    moveTo(x: number, y: number, content?: string): void {
         if (!this.isActive) this.show();
         if (content) this.setText(content);
 
@@ -47,11 +50,11 @@ class ChartTooltip {
             .style('top', (y + this.options.extraY) + 'px');
     }
 
-    setText(content: string) {
+    setText(content: string): void {
         this.tooltip.html(content);
     }
 
-    setOrientation(tooltipLeft: number) {
+    setOrientation(tooltipLeft: number): void {
         if (this.options.positionCointainer) {
             let positionContainerRight = this.options.positionCointainer.getBoundingClientRect().right;
             let tooltipRight = tooltipLeft + this.tooltip.node().offsetWidth;
@@ -59,7 +62,7 @@ class ChartTooltip {
         }
     }
 
-    show() {
+    show(): void {
         this.isActive = true;
         this.tooltip
             .classed(this.options.activeClass, true)
@@ -68,7 +71,7 @@ class ChartTooltip {
             .style('opacity', 1);
     }
 
-    hide() {
+    hide(): void {
         this.isActive = false;
         this.tooltip
             .classed(this.options.activeClass, false)
@@ -77,7 +80,7 @@ class ChartTooltip {
             .style('opacity', 0);
     }
 
-    destroy() {
+    destroy(): void {
         this.tooltip.remove();
     }
 }
@@ -105,8 +108,8 @@ class FocusLayer {
     private focusCircle: any;
     private focusOverlay: any;
     private chartGroup: any;
-    private x: any;
-    private y: any;
+    private x: d3Scale.ScaleTime<number, number>;
+    private y: d3Scale.ScaleLinear<number, number>;
 
     constructor(private customOptions: any = {}, private svg: any, private chartData: ChartData[]) {
         this.options = Object.assign(this.options, customOptions);
@@ -116,12 +119,12 @@ class FocusLayer {
         this.init();
     }
 
-    init() {
+    init(): void {
         this.createStructure();
         this.attachEvents();
     }
 
-    createStructure() {
+    createStructure(): void {
         this.chartGroup = this.svg.select('.chart-group');
         this.focusLayer = this.chartGroup.append('g')
             .attr('class', 'focus-layer')
@@ -146,7 +149,7 @@ class FocusLayer {
         this.focusOverlay.on('mouseover', this.enterHandler);
     }
 
-    private enterHandler = () => {
+    private enterHandler = (): void => {
         this.focusOverlay
             .on('mousemove', this.moveHandler)
             .on('mouseout', this.outHandler);
@@ -154,24 +157,26 @@ class FocusLayer {
         this.options.onEnter();
     }
 
-    private moveHandler = () => {
+    private moveHandler = (): void => {
         let d = this.getHoveredData();
-        this.focusLayer.attr('transform', `translate(${this.x(d.date) + 0.5}, 0)`);
+        this.focusLayer.attr('transform', `translate(${this.x(d.date)}, 0)`);
         this.focusCircle.attr('transform', `translate(0, ${this.y(d.value)})`);
         this.options.onMove(d);
     }
 
-    private getHoveredData() {
+    private getHoveredData(): ChartData {
+        console.log('convert date to number');
         let x0 = this.x.invert(d3.mouse(this.focusOverlay.node())[0] + this.options.pixelSpace);
         let i = this.bisectDate(this.chartData, x0, 1);
 
         let d0 = this.chartData[i - 1];
         let d1 = this.chartData[i];
-        let d = x0 - (+d0.date) > (+d1.date) - x0 ? d1 : d0;
+
+        let d = +x0 - (+d0.date) > (+d1.date) - (+x0) ? d1 : d0;
         return d;
     }
 
-    private outHandler = () => {
+    private outHandler = (): void => {
         this.focusLayer.style('display', 'none');
         this.focusOverlay
             .on('mousemove', null)
@@ -180,14 +185,14 @@ class FocusLayer {
         console.log('makecallback hide tooltip and remove from docuemnt move')
     }
 
-    detachEvents() {
+    detachEvents(): void {
         this.focusOverlay
             .on('mouseover', null)
             .on('mousemove', null)
             .on('mouseout', null);
     }
 
-    updateData(chartData: any[]) {
+    updateData(chartData: ChartData[]): void {
         this.chartData = chartData;
 
         let minDate = +d3.min(this.chartData, (d: ChartData) => d.date);
@@ -201,7 +206,7 @@ class FocusLayer {
         this.y.domain([0, d3.max(this.chartData, (d: ChartData) => d.value)]);
     }
 
-    destroy() {
+    destroy(): void {
         this.detachEvents();
         this.focusLayer.remove();
     }
@@ -217,15 +222,14 @@ class FocusLayer {
 export class LineChartComponent implements OnChanges {
     @ViewChild('chart') private chartContainer: ElementRef;
     @Input() private chartData: ChartData[] = [];
-    @Input() private width: number = 900;
-    @Input() private height: number = 500;
+    @Input() private chartWidth: number = 900;
+    @Input() private chartHeight: number = 500;
 
     private margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    //private svg: d3.Selection<any, any, any, any>;
     private svg: any;
     private chart: any;
-    private x: any;
-    private y: any;
+    private x: d3Scale.ScaleTime<number, number>;
+    private y: d3Scale.ScaleLinear<number, number>;
     private axisX: any;
     private axisY: any;
     private pixelSpace: number = 20;
@@ -234,16 +238,18 @@ export class LineChartComponent implements OnChanges {
    
     private focusLayer: FocusLayer;
     private tooltipItem: ChartTooltip;
+    private width: number = 900;
+    private height: number = 500;
 
     constructor() {}
 
-    private initTooltip() {
+    private initTooltip(): void {
         this.tooltipItem = new ChartTooltip({
             positionCointainer: this.chartContainer.nativeElement
         });
     }
 
-    private initFocus() {
+    private initFocus(): void {
         this.focusLayer = new FocusLayer({
             margin: this.margin,
             width: this.width,
@@ -267,14 +273,17 @@ export class LineChartComponent implements OnChanges {
         }
     }
 
-    private initSvg() {
-        this.width = this.width - this.margin.left - this.margin.right;
-        this.height = this.height - this.margin.top - this.margin.bottom;
+    private initSvg(): void {
+        this.width = this.chartWidth - this.margin.left - this.margin.right;
+        this.height = this.chartHeight - this.margin.top - this.margin.bottom;
 
         let minDate = +d3.min(this.chartData, (d: ChartData) => d.date);
         let maxDate = +d3.max(this.chartData, (d: ChartData) => d.date);
         let padding = (maxDate - minDate) * this.pixelSpace / this.width;
         this.svg = d3.select(this.chartContainer.nativeElement)
+            .attr('height', this.chartHeight)
+            .attr('width', this.chartWidth)
+            .attr('viewBox', `0 0 ${this.chartWidth} ${this.chartHeight}`)
             .append('g')
             .attr('class', 'chart-group')
             .attr('transform', `translate(${this.margin.left}, ${this.margin.top })`);
@@ -283,8 +292,9 @@ export class LineChartComponent implements OnChanges {
         this.y = d3.scaleLinear().range([this.height, 0]);
 
         this.valueline = d3.line()
-           .x((d: any) => this.x(d.date))
-           .y((d: any) => this.y(d.value));
+            .x((d: any) => this.x(d.date))
+            .y((d: any) => this.y(d.value));
+            //.curve(d3.curveCardinal);
 
 
         this.x.domain([minDate - padding, maxDate + padding]);
@@ -307,7 +317,7 @@ export class LineChartComponent implements OnChanges {
 
     }
 
-    ngOnChanges() {
+    ngOnChanges(): void {
         if (this.chartData && this.chartData.length) {
             if (this.svg) {
                 this.updateChart();
@@ -319,7 +329,7 @@ export class LineChartComponent implements OnChanges {
         }
     }
 
-    updateChart() {
+    updateChart(): void {
         if (!this.line) return;
 
         let minDate = +d3.min(this.chartData, (d: ChartData) => d.date);

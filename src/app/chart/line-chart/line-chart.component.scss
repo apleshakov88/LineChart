@@ -1,4 +1,4 @@
-﻿svg.line-chart-container {
+﻿svg.line-chart {
   background: #fff;
 
   .axis path {
@@ -61,23 +61,23 @@
   background: #333;
   padding: 10px;
   pointer-events: none;
-  transform: translate(20px, -50%);
+  transform: translate(25px, -20px);
   color: #fff;
 
   &.right-orientation {
-    transform: translate(calc(-100% - 20px), -50%);
+    transform: translate(calc(-100% - 25px), -20px);
 
     &:before {
       border-right-color: transparent;
       border-left: 10px solid #333;
       left: auto;
-      right: -20px;
+      right: -19px;
     }
   }
 
   &:before {
     position: absolute;
-    left: -20px;
+    left: -19px;
     top: 10px;
     content: '';
     height: 0;
