@@ -1,0 +1,80 @@
+﻿.table-chart {
+  display: flex;
+  flex-flow: column nowrap;
+  font-size: .8rem;
+  margin: 0.5rem;
+  line-height: 1.5;
+  border-bottom: 1px solid #d0d0d0;
+  flex: 1 1 auto;
+
+  .tbody {
+    position: relative;
+    max-height: 197px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: calc(100% + 20px);
+  }
+
+  .th {
+    display: none;
+    font-weight: 700;
+    background-color: #f2f2f2;
+  }
+  
+  .th > .td {
+    white-space: normal;
+  }
+  
+  .tr {
+    width: 100%;
+    display: flex;
+    flex-flow: row nowrap;
+    position: relative;
+  }
+
+  .progress {
+    position: absolute;
+    left: 0;
+    height: 100%;
+    width: 0;
+    background: #adadad;
+    z-index: 1;
+  }
+  
+  .tr:nth-of-type(even) {
+    background-color: #f2f2f2;
+  }
+  
+  .tr:nth-of-type(odd) {
+    background-color: #ffffff;
+  }
+  
+  .td {
+    display: flex;
+    flex-flow: row nowrap;
+    flex-grow: 1;
+    flex-basis: 0;
+    padding: 0.5em;
+    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0px;
+    white-space: nowrap;
+    border-bottom: 1px solid #d0d0d0;
+    position: relative;
+    z-index: 2;
+    white-space: normal;
+
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .tr > .td:first-child {
+    flex-grow: 3;
+    justify-content: flex-start;
+  }
+  .tr > .td:last-of-type {
+    //justify-content: flex-end;
+  }
+
+}

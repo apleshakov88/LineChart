@@ -1,0 +1,31 @@
+﻿<div class="chart-holder">
+    <h3>{{this.title}}</h3>
+    <div class="data-holder">
+        <div *ngIf="chartType == 'category'" class="category">
+            Cagories {{data.length}}/25
+        </div>
+        <div *ngIf="chartType == 'supplierSpend'" class="category">
+            Suppliers {{data.length}}/2565
+        </div>
+    </div>
+
+    <div class="table-chart">
+        <div class="tr th">
+            <div class="td" *ngFor="let field of columnFields">{{field.title}}</div>
+        </div>
+        <div class="tbody">
+            <div
+                class="tr"
+                *ngFor="let rowData of data"
+                (click)="rowClickHandler($event, rowData)"
+                (mouseover)="noTooltip ? null : onEnterHandler($event, rowData)"
+                (mousemove)="noTooltip ? null : onMoveHandler($event, rowData)"
+                (mouseout)="noTooltip ? null : onOutHandler($event, rowData)">
+                
+                <div class="td" *ngFor="let field of columnFields">{{formatData(field.key, rowData)}}</div>
+                <span class="progress" [style.width]="rowData.progress + '%'" ></span>
+                <span class="progress" [style.width]="rowData.percentageDifference*100 + '%'" ></span>
+            </div>
+        </div>
+    </div>
+</div>

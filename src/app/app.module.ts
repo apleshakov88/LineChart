@@ -4,10 +4,12 @@ import { FormsModule } from '@angular/forms';
 
 import { AppComponent } from './app.component';
 import { ChartModule } from './chart/chart.module';
+import { TableChartComponent } from './tableChart/table-chart.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    TableChartComponent
   ],
   imports: [
     BrowserModule,

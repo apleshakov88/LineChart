@@ -85,4 +85,20 @@
     border: 10px solid transparent;
     border-right: 10px solid #333;
   }
+
+  .value-label {
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+
+    &:before {
+      content: '';
+      display: inline-block;
+      margin: 0 10px 0 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: rgb(1, 184, 170);
+    }
+  }
 }

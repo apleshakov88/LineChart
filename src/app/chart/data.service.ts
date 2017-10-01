@@ -8,7 +8,6 @@ export class DataService {
     private lineChartURL: string = 'http://59c391dbd201270011552f4e.mockapi.io/line-chart';
     private updatedLineChartURL: string = 'http://59c391dbd201270011552f4e.mockapi.io/line-chart-updated';
     private isUpdated: boolean = false;
-    lineChartData = [];
 
 
     constructor(private http: Http) { }
@@ -19,7 +18,12 @@ export class DataService {
             .get(this.isUpdated ? this.updatedLineChartURL : this.lineChartURL)
             .map(response => {
                 this.isUpdated = !this.isUpdated;
-                return response.json();
+
+                let chartData = response.json();
+                chartData.forEach(function(el) {
+                    el.date = new Date(el.postingDateMonth).getTime();
+                });
+                return chartData;
             });
     }
 }

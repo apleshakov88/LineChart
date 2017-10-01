@@ -9,9 +9,6 @@
 
 import * as d3 from 'd3';
 import * as d3Scale from 'd3-scale';
-import * as d3Selection from 'd3-selection';
-
-import { ChartData } from '../chart-data.model';
 
 class ChartTooltip {
     private options: any = {
@@ -30,7 +27,6 @@ class ChartTooltip {
     constructor(private customOptions: any = {}) {
         this.options = Object.assign(this.options, customOptions);
         this.init();
-        console.log(d3Scale)
     }
 
     init(): void {
@@ -111,7 +107,7 @@ class FocusLayer {
     private x: d3Scale.ScaleTime<number, number>;
     private y: d3Scale.ScaleLinear<number, number>;
 
-    constructor(private customOptions: any = {}, private svg: any, private chartData: ChartData[]) {
+    constructor(private customOptions: any = {}, private svg: any, private chartData: any[]) {
         this.options = Object.assign(this.options, customOptions);
         this.svg = d3.select(svg);
 
@@ -160,12 +156,11 @@ class FocusLayer {
     private moveHandler = (): void => {
         let d = this.getHoveredData();
         this.focusLayer.attr('transform', `translate(${this.x(d.date)}, 0)`);
-        this.focusCircle.attr('transform', `translate(0, ${this.y(d.value)})`);
+        this.focusCircle.attr('transform', `translate(0, ${this.y(d.spent)})`);
         this.options.onMove(d);
     }
 
-    private getHoveredData(): ChartData {
-        console.log('convert date to number');
+    private getHoveredData(): any {
         let x0 = this.x.invert(d3.mouse(this.focusOverlay.node())[0] + this.options.pixelSpace);
         let i = this.bisectDate(this.chartData, x0, 1);
 
@@ -192,18 +187,20 @@ class FocusLayer {
             .on('mouseout', null);
     }
 
-    updateData(chartData: ChartData[]): void {
+    updateData(chartData: any[]): void {
         this.chartData = chartData;
 
-        let minDate = +d3.min(this.chartData, (d: ChartData) => d.date);
-        let maxDate = +d3.max(this.chartData, (d: ChartData) => d.date);
+        let minDate = +d3.min(this.chartData, (d: any) => d.date);
+        let maxDate = +d3.max(this.chartData, (d: any) => d.date);
+        let maxSpent =  +d3.max(this.chartData, (d: any) => d.spent);
         let padding = (maxDate - minDate) * this.options.pixelSpace / this.options.width;
+
 
         this.x = d3.scaleTime().range([0, this.options.width]);
         this.y = d3.scaleLinear().range([this.options.height, 0]);
 
         this.x.domain([minDate - padding, maxDate + padding]);
-        this.y.domain([0, d3.max(this.chartData, (d: ChartData) => d.value)]);
+        this.y.domain([0, Math.ceil(maxSpent / 1000000000) * 1000000000]);
     }
 
     destroy(): void {
@@ -221,11 +218,11 @@ class FocusLayer {
 
 export class LineChartComponent implements OnChanges {
     @ViewChild('chart') private chartContainer: ElementRef;
-    @Input() private chartData: ChartData[] = [];
+    @Input() private chartData: any[] = [];
     @Input() private chartWidth: number = 900;
     @Input() private chartHeight: number = 500;
 
-    private margin = { top: 20, right: 20, bottom: 30, left: 40 };
+    private margin = { top: 20, right: 20, bottom: 30, left: 60 };
     private svg: any;
     private chart: any;
     private x: d3Scale.ScaleTime<number, number>;
@@ -240,6 +237,8 @@ export class LineChartComponent implements OnChanges {
     private tooltipItem: ChartTooltip;
     private width: number = 900;
     private height: number = 500;
+
+    private chartVategoryText = 'Spent';
 
     constructor() {}
 
@@ -260,26 +259,30 @@ export class LineChartComponent implements OnChanges {
             },
             onMove: (d) => {
                 if (this.tooltipItem) {
-                    this.tooltipItem.moveTo(d3.event.pageX, d3.event.pageY, createTooltipHTML(d));
+                    this.tooltipItem.moveTo(d3.event.pageX, d3.event.pageY, this.createTooltipHTML(d));
                 }
             }
         }, this.chartContainer.nativeElement, this.chartData);
 
-        function createTooltipHTML(d) {
-            let formatTime = d3.timeFormat("%d.%m.%Y %H:%M:%S");
-            let html: string = `<div class="date-holder">Date: ${formatTime(d.date)}</div>`;
-            html += `<div class="value-holder">Value: ${d.value}</div>`;
-            return html;
-        }
+       
+    }
+
+    private createTooltipHTML(d):string {
+        let formatTime = d3.timeFormat("%d.%m.%Y %H:%M:%S");
+        let html: string = `<div class="date-holder">${formatTime(d.date)}</div>`;
+        html += `<div class="value-holder"><span class="value-label">${this.chartVategoryText}</span> ${d.spent.toString().replace(/(?!^)(?=(?:\d{3})+(?:\.|$))/gm, ' ').replace('.', ',')}</div>`;
+        return html;
     }
 
     private initSvg(): void {
         this.width = this.chartWidth - this.margin.left - this.margin.right;
         this.height = this.chartHeight - this.margin.top - this.margin.bottom;
 
-        let minDate = +d3.min(this.chartData, (d: ChartData) => d.date);
-        let maxDate = +d3.max(this.chartData, (d: ChartData) => d.date);
+        let minDate = +d3.min(this.chartData, (d: any) => d.date);
+        let maxDate = +d3.max(this.chartData, (d: any) => d.date);
+        let maxSpent =  +d3.max(this.chartData, (d: any) => d.spent);
         let padding = (maxDate - minDate) * this.pixelSpace / this.width;
+
         this.svg = d3.select(this.chartContainer.nativeElement)
             .attr('height', this.chartHeight)
             .attr('width', this.chartWidth)
@@ -293,21 +296,28 @@ export class LineChartComponent implements OnChanges {
 
         this.valueline = d3.line()
             .x((d: any) => this.x(d.date))
-            .y((d: any) => this.y(d.value));
+            .y((d: any) => this.y(d.spent));
             //.curve(d3.curveCardinal);
 
 
         this.x.domain([minDate - padding, maxDate + padding]);
-        this.y.domain([0, d3.max(this.chartData, (d: ChartData) => d.value)]);
+        this.y.domain([0, Math.ceil(maxSpent / 1000000000) * 1000000000]);
 
         this.axisX = this.svg.append('g')
             .attr('class', 'axis axis--x')
             .attr('transform', `translate(0, ${this.height})`)
-            .call(d3.axisBottom(this.x).tickSizeOuter(0).tickFormat(d3.timeFormat('%b %Y')));
+            .call(d3.axisBottom(this.x)
+                .tickSizeOuter(0)
+                .tickFormat(d3.timeFormat('%b %Y'))
+                .ticks(d3.timeMonth.every(2)));
 
         this.axisY = this.svg.append('g')
             .attr('class', 'axis axis--y')
-            .call(d3.axisLeft(this.y).tickSizeOuter(0).tickSizeInner(-this.width));
+            .call(d3.axisLeft(this.y)
+                .tickSizeOuter(0)
+                .tickFormat((d:any) => d / 1000000000 + ' billion')
+                .tickSizeInner(-this.width)
+                .ticks(Math.ceil(maxSpent / 1000000000) + 1));
 
         this.line = this.svg.append('path')
             .attr('class', 'line')
@@ -332,12 +342,13 @@ export class LineChartComponent implements OnChanges {
     updateChart(): void {
         if (!this.line) return;
 
-        let minDate = +d3.min(this.chartData, (d: ChartData) => d.date);
-        let maxDate = +d3.max(this.chartData, (d: ChartData) => d.date);
+        let minDate = +d3.min(this.chartData, (d: any) => d.date);
+        let maxDate = +d3.max(this.chartData, (d: any) => d.date);
+        let maxSpent =  +d3.max(this.chartData, (d: any) => d.spent);
         let padding = (maxDate - minDate) * this.pixelSpace / this.width;
 
         this.x.domain([minDate - padding, maxDate + padding]);
-        this.y.domain([0, d3.max(this.chartData, (d: ChartData) => d.value)]);
+        this.y.domain([0, Math.ceil(maxSpent / 1000000000) * 1000000000]);
 
         this.line
             .data([this.chartData])
@@ -346,10 +357,17 @@ export class LineChartComponent implements OnChanges {
 
         this.axisX
             .transition()
-            .call(d3.axisBottom(this.x).tickSizeOuter(0).tickFormat(d3.timeFormat('%b %Y')));
+            .call(d3.axisBottom(this.x)
+                .tickSizeOuter(0)
+                .tickFormat(d3.timeFormat('%b %Y'))
+                .ticks(d3.timeMonth.every(2)));
         this.axisY
             .transition()
-            .call(d3.axisLeft(this.y).tickSizeOuter(0).tickSizeInner(-this.width));
+            .call(d3.axisLeft(this.y)
+                .tickSizeOuter(0)
+                .tickFormat((d:any) => d / 1000000000 + ' billion')
+                .tickSizeInner(-this.width)
+                .ticks(Math.ceil(maxSpent / 1000000000) + 1));
 
         this.focusLayer.updateData(this.chartData);
     }

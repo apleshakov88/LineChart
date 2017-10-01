@@ -1,4 +1,42 @@
 ﻿<h1>
   <line-chart [chartData]="chartData" [chartWidth]="514" [chartHeight]="250"></line-chart>
   <button (click)="ferfreshData()">Refresh</button>
+
+  <table-chart
+    [data] = "dataLevel1Category"
+    [title]="'Level 1 Category'"
+    chartType="category"
+    [columnFields]="[
+      {key: 'name', title: 'Name'},
+      {key: 'id', title: 'Id'},
+      {key: 'supplierCount', title: 'Supplier'},
+      {key: 'spend', title: 'Spend (Millions)'},
+      {key: 'spendCurrent', title: 'Spend Current'},
+      {key: 'spendPrevious', title: 'Spend Previous'},
+      {key: 'percentageDifference', title: 'Percentage Difference'},
+      {key: 'isSelected', title: 'Selected'}
+    ]">
+  </table-chart>
+  <table-chart
+    [data] = "dataLevel2Category"
+    [title]="'Level 2 Category'"
+    chartType="category"
+    [columnFields]="[
+      {key: 'name', title: 'Name'},
+      {key: 'supplier', title: 'Supplier'},
+      {key: 'spend', title: 'Spend (Millions)'},
+      {key: 'change', title: 'Change Y/Y'}
+    ]">
+  </table-chart>
+  <table-chart
+    [data] = "dataSupplier"
+    [title]="'Supplier List by Spend'"
+    chartType="supplierSpend"
+    [columnFields]="[
+      {key: 'name', title: 'Name'},
+      {key: 'status', title: 'Status'},
+      {key: 'spend', title: 'Spend (Millions)'},
+      {key: 'total', title: '% of Total'}
+    ]">
+  </table-chart>
 </h1>
